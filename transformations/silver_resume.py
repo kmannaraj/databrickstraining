@@ -7,8 +7,6 @@ schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Co
 
 
 @dp.view(name="silver_resume_vw")
-@dp.expect_or_drop("valid_name", "Name IS NOT NULL")
-@dp.expect_or_drop("valid_skills", "Skills IS NOT NULL")
 def silver_resume():
     df = spark.readStream.table(
         f"{catalog_name}.bronze.resume_data"
@@ -57,6 +55,10 @@ def silver_resume():
 dp.create_streaming_table(
     name=f"{catalog_name}.silver.resume_data",
     comment="SCD1 Silver target table - Resume structured fields extracted via AI",
+    expect_or_drop={
+        "valid_name": "Name IS NOT NULL",
+        "valid_skills": "Skills IS NOT NULL",
+    },
 )
 
 dp.apply_changes(

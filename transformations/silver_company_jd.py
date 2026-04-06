@@ -7,8 +7,6 @@ schema = "struct<Title:string, Experience:string, Skills:string>"
 
 
 @dp.view(name="silver_company_jd_vw")
-@dp.expect_or_drop("valid_title", "Title IS NOT NULL")
-@dp.expect_or_drop("valid_skills", "Skills IS NOT NULL")
 def silver_company_jd():
     df = spark.readStream.table(
         f"{catalog_name}.bronze.company_jd"
@@ -53,6 +51,10 @@ def silver_company_jd():
 dp.create_streaming_table(
     name=f"{catalog_name}.silver.company_jd_data",
     comment="SCD1 Silver target table - Company JD structured fields extracted via AI",
+    expect_or_drop={
+        "valid_title": "Title IS NOT NULL",
+        "valid_skills": "Skills IS NOT NULL",
+    },
 )
 
 dp.apply_changes(
