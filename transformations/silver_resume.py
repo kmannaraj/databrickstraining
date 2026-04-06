@@ -57,10 +57,6 @@ def silver_resume():
 dp.create_streaming_table(
     name=f"{catalog_name}.silver.resume_data",
     comment="SCD1 Silver target table - Resume structured fields extracted via AI",
-    expect_or_drop={
-        "valid_name": "Name IS NOT NULL",
-        "valid_skills": "Skills IS NOT NULL",
-    },
 )
 
 dp.apply_changes(

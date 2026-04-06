@@ -51,10 +51,6 @@ def silver_company_jd():
 dp.create_streaming_table(
     name=f"{catalog_name}.silver.company_jd_data",
     comment="SCD1 Silver target table - Company JD structured fields extracted via AI",
-    expect_or_drop={
-        "valid_title": "Title IS NOT NULL",
-        "valid_skills": "Skills IS NOT NULL",
-    },
 )
 
 dp.apply_changes(
