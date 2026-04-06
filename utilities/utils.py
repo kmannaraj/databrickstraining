@@ -62,18 +62,20 @@ def extract_phone(text):
         return None
     # Remove PDF extraction artifacts: collapse multiple spaces into one
     text = re.sub(r' {2,}', ' ', text)
-    # Matches formats: +1-800-555-1234, (800) 555-1234, 800.555.1234, 8005551234
-    # \s? between digit groups handles spaces inserted by PDF extraction (e.g. "01 16")
+    # Mocked data may have fewer than 10 digits — match any phone-like pattern
+    # Priority order: most structured first, fallback to any digit group
     patterns = [
-        r'\+?\d{1,3}[\s\-.]?\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\s?\d{4}',  # full international/US with optional space
-        r'\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\s?\d{4}',                      # 10-digit US
-        r'\+?\d{1,3}[\s\-.]?\d{3}[\s\-.]?\s?\d{4}',                       # short e.g. +1-555-0125
-        r'\+?[\d\s\-\.]{7,15}',                                             # fallback: any digit sequence 7-15 chars
+        r'\+?\d{1,3}[\s\-.]?\(?\d{2,4}\)?[\s\-.]?\d{2,4}[\s\-.]?\d{0,4}',  # international/US any length
+        r'\(?\d{2,4}\)?[\s\-.]?\d{2,4}[\s\-.]?\d{0,4}',                      # local any length
+        r'\+?[\d][\d\s\-\.\(\)]{2,19}',                                        # fallback: digit sequence 3-20 chars
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
-            return match.group(0).strip()
+            result = match.group(0).strip()
+            # Must contain at least 3 digits
+            if len(re.sub(r'\D', '', result)) >= 3:
+                return result
     return None
 
 

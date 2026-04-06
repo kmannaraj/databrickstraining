@@ -3,10 +3,12 @@ from pyspark import pipelines as dp
 
 catalog_name = spark.conf.get("catalog_name", "resume_batch3")
 primary_key = "path"
-schema = "struct<Name:string, Title:string, Experience:string, Skills:string>"
+schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Country:string, Email:string, Phone_Number:string>"
 
 
 @dp.view(name="silver_resume_vw")
+@dp.expect_or_drop("valid_name", "Name IS NOT NULL")
+@dp.expect_or_drop("valid_skills", "Skills IS NOT NULL")
 def silver_resume():
     df = spark.readStream.table(
         f"{catalog_name}.bronze.resume_data"
@@ -18,16 +20,19 @@ def silver_resume():
                 'You are a data extraction engine. Extract the following fields from the resume text:\n',
                 '- Name (string): the candidate full name\n',
                 '- Title (string): the candidate current or target job title\n',
-                '- Experience (string, year range like "5-8"): total years of experience\n',
-                '- Skills (string): comma-separated list of technical skills\n\n',
+                '- Experience (string, year range like "5-8" or "12+" or "12"): total years of experience\n',
+                '- Skills (string): comma-separated list of technical skills\n',
+                '- Country (string): the candidate country of residence or nationality\n',
+                '- Email (string): the candidate email address\n',
+                '- Phone_Number (string): the candidate phone number, extract as-is in any format. This is mocked data so the number may contain fewer than 10 digits — still extract it.\n\n',
                 'Rules:\n',
                 '1. Return ONLY a valid JSON object, nothing else.\n',
                 '2. No markdown, no code blocks, no explanations.\n',
-                '3. Experience MUST be a string year range (e.g. "5-8"). If only one number, use "5-5".\n',
+                '3. Experience MUST be a string (e.g. "5-8", "12+", "3"). If only one number, keep as-is.\n',
                 '4. Skills must be a comma-separated string without brackets.\n',
                 '5. If a field is missing, return null for that field.\n\n',
                 'Output format example:\n',
-                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\"}\n\n',
+                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\", \"Country\": \"USA\", \"Email\": \"john@example.com\", \"Phone_Number\": \"555-01\"}\n\n',
                 'Input text:\n---\n',
                 parsed_content,
                 '\n---\nJSON output:'

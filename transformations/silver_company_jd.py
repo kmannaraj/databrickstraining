@@ -7,6 +7,8 @@ schema = "struct<Title:string, Experience:string, Skills:string>"
 
 
 @dp.view(name="silver_company_jd_vw")
+@dp.expect_or_drop("valid_title", "Title IS NOT NULL")
+@dp.expect_or_drop("valid_skills", "Skills IS NOT NULL")
 def silver_company_jd():
     df = spark.readStream.table(
         f"{catalog_name}.bronze.company_jd"
