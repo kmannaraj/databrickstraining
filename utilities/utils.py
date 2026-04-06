@@ -30,7 +30,10 @@ def parse_file_content(content, path):
     try:
         path_lower = path.lower()
         if path_lower.endswith(".pdf"):
-            from PyPDF2 import PdfReader
+            try:
+                from pypdf import PdfReader
+            except ImportError:
+                from PyPDF2 import PdfReader
             reader = PdfReader(io.BytesIO(bytes(content)))
             text = ""
             for page in reader.pages:
