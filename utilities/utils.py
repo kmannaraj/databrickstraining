@@ -62,20 +62,21 @@ def extract_phone(text):
         return None
     # Remove PDF extraction artifacts: collapse multiple spaces into one
     text = re.sub(r' {2,}', ' ', text)
-    # Mocked data may have fewer than 10 digits — match any phone-like pattern
-    # Priority order: most structured first, fallback to any digit group
-    patterns = [
-        r'\+?\d{1,3}[\s\-.]?\(?\d{2,4}\)?[\s\-.]?\d{2,4}[\s\-.]?\d{0,4}',  # international/US any length
-        r'\(?\d{2,4}\)?[\s\-.]?\d{2,4}[\s\-.]?\d{0,4}',                      # local any length
-        r'\+?[\d][\d\s\-\.\(\)]{2,19}',                                        # fallback: digit sequence 3-20 chars
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            result = match.group(0).strip()
-            # Must contain at least 3 digits
-            if len(re.sub(r'\D', '', result)) >= 3:
-                return result
+    # 1. Look near phone/tel/mobile/cell keywords first — works for mocked data with any digit count
+    keyword_match = re.search(
+        r'(?:phone|tel|mobile|cell|contact)[^\d]{0,10}([\+\d][\d\s\-\.\(\)]{2,20})',
+        text, re.IGNORECASE
+    )
+    if keyword_match:
+        result = keyword_match.group(1).strip().rstrip('.,;')
+        if len(re.sub(r'\D', '', result)) >= 3:
+            return result
+    # 2. Fallback: any digit sequence with optional separators, at least 3 digits
+    fallback_match = re.search(r'\+?[\d][\d\s\-\.\(\)]{2,19}', text)
+    if fallback_match:
+        result = fallback_match.group(0).strip()
+        if len(re.sub(r'\D', '', result)) >= 3:
+            return result
     return None
 
 

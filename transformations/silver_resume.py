@@ -3,7 +3,7 @@ from pyspark import pipelines as dp
 
 catalog_name = spark.conf.get("catalog_name", "resume_batch3")
 primary_key = "path"
-schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Country:string, Email:string, Phone_Number:string>"
+schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Email:string, Phone_Number:string>"
 
 
 @dp.view(name="silver_resume_vw")
@@ -20,9 +20,8 @@ def silver_resume():
                 '- Title (string): the candidate current or target job title\n',
                 '- Experience (string, year range like "5-8" or "12+" or "12"): total years of experience\n',
                 '- Skills (string): comma-separated list of technical skills\n',
-                '- Country (string): the candidate country of residence or nationality\n',
                 '- Email (string): the candidate email address\n',
-                '- Phone_Number (string): the candidate phone number, extract as-is in any format. This is mocked data so the number may contain fewer than 10 digits — still extract it.\n\n',
+                '- Phone_Number (string): any number labeled as phone, tel, mobile, or cell. This is mocked data — it may be as short as 3 digits. Extract the digits as-is, do not validate length.\n\n',
                 'Rules:\n',
                 '1. Return ONLY a valid JSON object, nothing else.\n',
                 '2. No markdown, no code blocks, no explanations.\n',
@@ -30,7 +29,7 @@ def silver_resume():
                 '4. Skills must be a comma-separated string without brackets.\n',
                 '5. If a field is missing, return null for that field.\n\n',
                 'Output format example:\n',
-                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\", \"Country\": \"USA\", \"Email\": \"john@example.com\", \"Phone_Number\": \"555-01\"}\n\n',
+                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\", \"Email\": \"john@example.com\", \"Phone_Number\": \"555-01\"}\n\n',
                 'Input text:\n---\n',
                 parsed_content,
                 '\n---\nJSON output:'
