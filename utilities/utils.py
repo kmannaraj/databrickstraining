@@ -60,21 +60,23 @@ def extract_email(text):
 def extract_phone(text):
     if text is None:
         return None
-    # Remove PDF extraction artifacts: collapse multiple spaces into one
+    # Collapse multiple spaces (PDF artifact: "01 16" from "0116")
     text = re.sub(r' {2,}', ' ', text)
-    # 1. Look near phone/tel/mobile/cell keywords first — works for mocked data with any digit count
+    # 1. Look near phone/tel/mobile/cell/contact keywords — captures whatever follows
     keyword_match = re.search(
-        r'(?:phone|tel|mobile|cell|contact)[^\d]{0,10}([\+\d][\d\s\-\.\(\)]{2,20})',
+        r'(?:phone|tel|mobile|cell|contact)\s*[:\-]?\s*([\+\d][\d\s\-\.\(\)]{1,25})',
         text, re.IGNORECASE
     )
     if keyword_match:
-        result = keyword_match.group(1).strip().rstrip('.,;')
+        result = keyword_match.group(1).strip().rstrip('.,; \n')
+        # Trim trailing non-digit noise (e.g. captured extra word after number)
+        result = re.sub(r'[\s\-\.]+$', '', result)
         if len(re.sub(r'\D', '', result)) >= 3:
             return result
-    # 2. Fallback: any digit sequence with optional separators, at least 3 digits
-    fallback_match = re.search(r'\+?[\d][\d\s\-\.\(\)]{2,19}', text)
+    # 2. Fallback: any sequence starting with + or digit, allowing spaces/dashes, min 3 digits
+    fallback_match = re.search(r'\+?[\d][\d\s\-\.\(\)]{2,24}', text)
     if fallback_match:
-        result = fallback_match.group(0).strip()
+        result = fallback_match.group(0).strip().rstrip('.,;')
         if len(re.sub(r'\D', '', result)) >= 3:
             return result
     return None

@@ -3,7 +3,7 @@ from pyspark import pipelines as dp
 
 catalog_name = spark.conf.get("catalog_name", "resume_batch3")
 primary_key = "path"
-schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Email:string, Phone_Number:string>"
+# Phone_Number is taken directly from bronze extracted_phone (not AI)
 
 
 @dp.view(name="silver_resume_vw")
@@ -21,7 +21,6 @@ def silver_resume():
                 '- Experience (string, year range like "5-8" or "12+" or "12"): total years of experience\n',
                 '- Skills (string): comma-separated list of technical skills\n',
                 '- Email (string): the candidate email address\n',
-                '- Phone_Number (string): any number labeled as phone, tel, mobile, or cell. This is mocked data — it may be as short as 3 digits. Extract the digits as-is, do not validate length.\n\n',
                 'Rules:\n',
                 '1. Return ONLY a valid JSON object, nothing else.\n',
                 '2. No markdown, no code blocks, no explanations.\n',
@@ -29,24 +28,28 @@ def silver_resume():
                 '4. Skills must be a comma-separated string without brackets.\n',
                 '5. If a field is missing, return null for that field.\n\n',
                 'Output format example:\n',
-                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\", \"Email\": \"john@example.com\", \"Phone_Number\": \"555-01\"}\n\n',
+                '{\"Name\": \"John Smith\", \"Title\": \"Data Engineer\", \"Experience\": \"3-5\", \"Skills\": \"Python,Spark,SQL\", \"Email\": \"john@example.com\"}\n\n',
                 'Input text:\n---\n',
                 parsed_content,
                 '\n---\nJSON output:'
             )
         ) as data""",
         "modificationTime",
-        "path"
+        "path",
+        "extracted_phone"
     )
+    ai_schema = "struct<Name:string, Title:string, Experience:string, Skills:string, Email:string>"
     df = df.select(
-        F.from_json(F.col("data"), schema).alias("data"),
+        F.from_json(F.col("data"), ai_schema).alias("data"),
         F.col("path"),
-        F.col("modificationTime")
+        F.col("modificationTime"),
+        F.col("extracted_phone")
     )
     df = df.select(
         F.col("data.*"),
         F.col("path"),
-        F.col("modificationTime")
+        F.col("modificationTime"),
+        F.col("extracted_phone").alias("Phone_Number")
     )
     return df
 
