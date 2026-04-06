@@ -8,7 +8,7 @@ primary_key = "path"
 
 @dp.view(name="silver_resume_vw")
 def silver_resume():
-    df = spark.readStream.table(
+    df = spark.readStream.option("ignoreDeletes", "true").table(
         f"{catalog_name}.bronze.resume_data"
     )
     df = df.selectExpr(

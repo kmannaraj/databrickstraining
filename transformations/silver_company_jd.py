@@ -8,7 +8,7 @@ schema = "struct<Title:string, Experience:string, Skills:string>"
 
 @dp.view(name="silver_company_jd_vw")
 def silver_company_jd():
-    df = spark.readStream.table(
+    df = spark.readStream.option("ignoreDeletes", "true").table(
         f"{catalog_name}.bronze.company_jd"
     )
     df = df.selectExpr(
